@@ -19,9 +19,9 @@ layout_abg = [
 
 layout_slider = [
     [Text("teta 1:"),Multiline(size= (5,2)),Text("teta 2:"),Multiline(size= (5,2)),Text("teta 3:"),Multiline(size= (5,2)) ],
-    [Text("teta 1:"), Slider(range=(0,180),orientation="h",size=(32,20))],
-    [Text("teta 2:"), Slider(range=(0,180),orientation="h",size=(32,20))],
-    [Text("teta 3:"), Slider(range=(0,180),orientation="h",size=(32,20))]  
+    [Text("teta 1:"), Slider(range=(0,180),orientation="h",size=(32,20),default_value=0,key="slider_01")],
+    [Text("teta 2:"), Slider(range=(0,180),orientation="h",size=(32,20),default_value=0,key="slider_02")],
+    [Text("teta 3:"), Slider(range=(0,180),orientation="h",size=(32,20),default_value=0,key="slider_03")]  
     ]
 
 layout = [[
@@ -41,7 +41,13 @@ window = Window(
 )
 
 
-event, values = window.read()
-print(window.read())
+# event, values = window.read()
+while 1:
+    event, values = window.read(timeout=20)
+    print("Event:",event)
+    print("Values:",values)
+    # print(window.read(timeout=20))
+    window["slider_01"].update()
+
 
 window.close()
