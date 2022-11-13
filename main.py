@@ -1,38 +1,45 @@
 from tkinter import CENTER
 from PySimpleGUI import Window, Text, Input, Push, Column, VSeparator, HSeparator, Button, Slider,Combo, Multiline,cprint,Ok
+import PySimpleGUI as sg
 import serial #pip install PySerial
 import time
 import threading
 
 mytime = 0
-readInterface = 0
+
 event="" 
 values=""
+
+position = {'Px':0,'Py':0,'Pz':0}
+angulo = {'alfa':0,'beta':0,'gama':0}
 
 slider01 = {'value':90,'sent':0,'serial':"S1",'msg':"",'resp':""}
 slider02 = {'value':90,'sent':0,'serial':"S2",'msg':"",'resp':""}
 slider03 = {'value':90,'sent':0,'serial':"S3",'msg':"",'resp':""}
+garra = {'value':"Open",'sent':0,'serial':"S3",'msg':"",'resp':""}
 
 timeoutSend = 0
 
 layout_bot = [
-    [Text("Escolha como gostaria de resolver:",auto_size_text= True), Combo(["RAG", "Euler", "DH"]), Push(),Button("Teste do Robô",enable_events=True, size=(12,1), key='add')],
+    [Text("Escolha como gostaria de resolver:",auto_size_text=True,enable_events=True), Combo(["RAG", "Euler", "DH"],enable_events=True,key="metodo"), Push(),Button("Teste do Robô",enable_events=True, size=(12,1), key='add')],
 ]
 
 layout_Pxyz = [
-    [Push(),Push(),Text("Px:"), Input(size=(4,1), key="Px"),Push(),Push(),Text("Al:"),Input(size=(4,1), key="alfa"),Push(),Push(),Push(),Push()],
-    [Push(),Push(),Text("Py:"), Input(size=(4,1), key="Py"),Push(),Push(),Text("be:"), Input(size=(4,1), key="beta"),Push(),Push(),Push(),Push()],
-    [Push(),Push(),Text("Pz:"),Input(size=(4,1), key="Pz"),Push(),Push(),Text("ga:"), Input(size=(4,1), key="gama"),Push(),Push(),Push(),Push()],
+    [Push(),Push(),Text("Px:"), Input(size=(4,1), key="Px",enable_events=True,default_text=0),Push(),Push(),Text("Al:"),Input(size=(4,1), key="alfa",enable_events=True),Push(),Push(),Push(),Push()],
+    [Push(),Push(),Text("Py:"), Input(size=(4,1), key="Py",enable_events=True,default_text=0),Push(),Push(),Text("be:"), Input(size=(4,1), key="beta",enable_events=True),Push(),Push(),Push(),Push()],
+    [Push(),Push(),Text("Pz:"),Input(size=(4,1), key="Pz",enable_events=True,default_text=0),Push(),Push(),Text("ga:"), Input(size=(4,1), key="gama",enable_events=True),Push(),Push(),Push(),Push()],
 ]
 
 layout_abg = [
     [Button("envio",enable_events=True, size=(12,1), key='add1')],
-    [Button("envio2",enable_events=True, size=(12,1), key='add2')]
+    [Button("envio2",enable_events=True, size=(12,1), key='add2')],
+    [Button("Garra",enable_events=True, size=(12,1), key='add3')]
     
 ]
 
 layout_slider = [
-    [Text("teta 1:"),Multiline(size= (5,2)),Text("teta 2:"),Multiline(size= (5,2)),Text("teta 3:"),Multiline(size= (5,2)) ],
+    # [Text("teta 1:"),Multiline(size= (5,2)),Text("teta 2:"),Multiline(size= (5,2)),Text("teta 3:"),Multiline(size= (5,2)) ],
+    [Text("teta 1:"),Input(size=(4,1), key="teta1",enable_events=True,default_text=90),Text("teta 2:"),Input(size=(4,1), key="teta2",enable_events=True,default_text=90),Text("teta 3:"),Input(size=(4,1), key="teta3",enable_events=True,default_text=90) ],
     [Text("teta 1:"), Push(),Slider(range=(0,180),orientation="h",enable_events=True,size=(32,20),default_value=slider01["value"],key="slider_01")],
     [Text("teta 2:"), Push(),Slider(range=(0,180),orientation="h",enable_events=True,size=(32,20),default_value=slider02["value"],key="slider_02")],
     [Text("teta 3:"), Push(),Slider(range=(0,180),orientation="h",enable_events=True,size=(32,20),default_value=slider03["value"],key="slider_03")]  
@@ -105,7 +112,6 @@ serialControl = True
 gateNumber = 'COM7'
 baudRate = 115200
 
-
 while serialControl:
     print("Opening Serial Communication...")
     try:
@@ -132,17 +138,20 @@ comPort.close()
 comPort.open()
 serialData = comPort.read_until().decode('utf-8').rstrip()
 
-threading.Timer( 0.1, periodic).start()
+threading.Timer(0.1, periodic).start()
 
 while 1:
-  
-    event, values = window.read(timeout=5)
+
+    # tratamento dos eventos
     if event is not None:
+
+        #slider
         if event == "slider_01":
             slider01["value"] = values["slider_01"]
             slider01["msg"] = "S1:"+str(int(slider01["value"]))
             slider01["resp"] = "E" + slider01["msg"]
             slider01["sent"] = writeSerial(slider01["msg"])
+            window.Element("teta1").Update(int(slider01["value"]))
             timeoutSend = 15
             # print("slider_01:",slider01["value"])
         if event == "slider_02":
@@ -150,6 +159,7 @@ while 1:
             slider02["msg"] = "S2:"+str(int(slider02["value"]))
             slider02["resp"] = "E" + slider02["msg"]
             slider02["sent"] = writeSerial(slider02["msg"])
+            window.Element("teta2").Update(int(slider02["value"]))
             timeoutSend = 15
             # print("slider_02:",slider02["value"])
         if event == "slider_03":
@@ -157,12 +167,59 @@ while 1:
             slider03["msg"] = "S3:"+str(int(slider03["value"]))
             slider03["resp"] = "E" + slider03["msg"]
             slider03["sent"] = writeSerial(slider03["msg"])
+            window.Element("teta3").Update(int(slider03["value"]))
             timeoutSend = 15
             # print("slider_02:",slider03["value"])
-    
-    
+
+        #botão
+        if event == "metodo":
+            metodo = values["metodo"]
+            print("Metodo:",metodo)
+        if event == "add":
+            print("Teste do Robô press")
+        if event == "add1":
+            print("Envio press")
+        if event == "add2":
+            print("Envio 2 press")
+        if event == "add3":
+            if garra["value"] == "Open":
+                print("Abrir Garra")
+                garra["value"] = "Close"
+            elif garra ["value"] == "Close":
+                print("Fechar Garra")
+                garra["value"] = "Open"
+
+        #ponto
+        if event == "Px":
+            position["Px"] = values["Px"]
+            print("Px:",position["Px"])
+        if event == "Py":
+            position["Py"] = values["Py"]
+            print("Py:",position["Py"])
+        if event == "Pz":
+            position["Pz"] = values["Pz"]
+            print("Pz:",position["Pz"])
+        
+        #angulo
+        if event == "alfa":
+            angulo["alfa"] = values["alfa"]
+            print("alfa",angulo["alfa"])
+        if event == "beta":
+            angulo["beta"] = values["beta"]
+            print("beta",angulo["beta"])
+        if event == "gama":
+            angulo["gama"] = values["gama"]
+            print("gama",angulo["gama"])
+            
+    # caso a janela seja fechada
+    if event is None:
+        window.close()
+    else:
+        event, values = window.read(timeout=5)
+
     serialData = comPort.read_until().decode('utf-8').rstrip()
 
+    # verificação da resposta
     if (timeoutSend == 0) and (slider01["sent"]!=0):
         # print(".")
         slider01["sent"] = writeSerial(slider01["msg"])
@@ -188,15 +245,8 @@ while 1:
         slider03["sent"]=0
         print("[Python] Enviado:",slider03["msg"],"R:Ok!")
 
-
     # elif (slider01["sent"]!=0):
     #     serialData = comPort.read_until().decode('utf-8').rstrip()
     #     if serialData.count(slider01["resp"]):
     #         print("Ok")
     #         slider01["sent"]=0
-
-
-
-
-
-window.close()
