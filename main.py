@@ -25,9 +25,9 @@ layout_bot = [
 ]
 
 layout_Pxyz = [
-    [Push(),Push(),Text("Px:"), Input(size=(4,1), key="Px",enable_events=True,default_text=0),Push(),Push(),Text("Al:"),Input(size=(4,1), key="alfa",enable_events=True),Push(),Push(),Push(),Push()],
-    [Push(),Push(),Text("Py:"), Input(size=(4,1), key="Py",enable_events=True,default_text=0),Push(),Push(),Text("be:"), Input(size=(4,1), key="beta",enable_events=True),Push(),Push(),Push(),Push()],
-    [Push(),Push(),Text("Pz:"),Input(size=(4,1), key="Pz",enable_events=True,default_text=0),Push(),Push(),Text("ga:"), Input(size=(4,1), key="gama",enable_events=True),Push(),Push(),Push(),Push()],
+    [Push(),Push(),Text("Px:"), Input(size=(4,1), key="Px",enable_events=True,default_text=0),Push(),Push(),Text("Al:"),Input(size=(4,1), key="alfa",enable_events=True,default_text=0),Push(),Push(),Push(),Push()],
+    [Push(),Push(),Text("Py:"), Input(size=(4,1), key="Py",enable_events=True,default_text=0),Push(),Push(),Text("be:"), Input(size=(4,1), key="beta",enable_events=True,default_text=0),Push(),Push(),Push(),Push()],
+    [Push(),Push(),Text("Pz:"),Input(size=(4,1), key="Pz",enable_events=True,default_text=0),Push(),Push(),Text("ga:"), Input(size=(4,1), key="gama",enable_events=True,default_text=0),Push(),Push(),Push(),Push()],
 ]
 
 layout_abg = [
@@ -185,9 +185,13 @@ while 1:
             if garra["value"] == "Open":
                 print("Abrir Garra")
                 garra["value"] = "Close"
+                garra["msg"] = "S4:0"
+                garra["sent"] = writeSerial(garra["msg"])
             elif garra ["value"] == "Close":
                 print("Fechar Garra")
                 garra["value"] = "Open"
+                garra ["msg"] = "S4:120"
+                garra["sent"] = writeSerial(garra["msg"])
 
         #ponto
         if event == "Px":
@@ -210,12 +214,20 @@ while 1:
         if event == "gama":
             angulo["gama"] = values["gama"]
             print("gama",angulo["gama"])
-            
+
+        #angulo
+        if event == "teta1":
+            print("Teta1")
+        if event == "teta2":
+            print("Teta2")
+        if event == "teta3":
+            print("Teta3")
+
     # caso a janela seja fechada
     if event is None:
         window.close()
     else:
-        event, values = window.read(timeout=5)
+        event, values = window.read(timeout=50)
 
     serialData = comPort.read_until().decode('utf-8').rstrip()
 
