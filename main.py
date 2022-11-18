@@ -4,6 +4,10 @@ import PySimpleGUI as sg
 import serial #pip install PySerial
 import time
 import threading
+from calculosM import MatrixRob
+
+calculando = MatrixRob()
+calculando.teste()
 
 mytime = 0
 
