@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # importamos las librerías necesarias
 import sympy as sp
+import numpy as np
 
 class MatrixRob():
 
@@ -30,76 +31,181 @@ class MatrixRob():
         T = Rz*tz*ta*Rx
         return T
 
-    def prepara_modelo(self):
+    def cinematica_dir(self, a, b, c,d):
+
+        # Descricao do robo
+        # Rotacao Graus |      x      |      y      |     z
+        # ---------------------------------------------------------
+        #      q1       |    0.000    |   0.000    |     0.000     | junta rotativa base  (Rz)
+        #      q2       |    0.000    |   0.000    |     0.000     | junta rotativa elo 1 (Rx)
+        #      q3       |    0.000    |   0.000    |     0.000     | junta rotativa elo 2 (Rx)
+        # ---------------------------------------------------------
+        #      0         |    0       |     0       |     0         | sobra ferramenta
+
+        # Posicoe de partida servos (graus)
+        m1 = 180 #corrigindo valor das coordenadas...
+        m2 = 0
+        m3 = -135
+        m4 = 0
+        
+        # Mecanismo 4 barras
+        # c =  (b - c)
+        # c +=b
+
+        # c *=-1
+        # b = b * (-1)
+        # print(a, b, c)
+
+        q1 = (a+m1)*np.pi/180
+        q2 =(b+m2)*np.pi/180      
+        q3 = (c+m3)*np.pi/180
+        q4 = (b-180+m4)*np.pi/180
+
+        # Comprimento elos
+        # x1 = 3.475
+        x1 = 5.2
+        x2 = 8.18
+        x3 = 8.08
+        # x3 = 13.58
+
+        # Rotacao base
+        Rz = np.matrix([[np.cos(q1), -np.sin(q1), 0, 0],
+                        [np.sin(q1), np.cos(q1), 0, 0],
+                        [0, 0, 1, 0],
+                        [0, 0, 0, 1]])
+
+        # Comprimento base
+        tz = np.matrix([[1, 0, 0, 0],
+                        [0, 1, 0, 0  ],
+                        [0, 0, 1, x1 ],
+                        [0, 0, 0, 1  ]])
+
+        # Rotacao junta 1
+        Ry1 = np.matrix([[np.cos(q2), 0, np.sin(q2), 0], 
+                    [0, 1, 0, 0],
+                    [-np.sin(q2), 0, np.cos(q2), 0],
+                    [0, 0, 0, 1]])
+
+        Ry1 = np.linalg.inv(Ry1)
+
+        # Comprimento elo 1
+        tx1 = np.matrix([[1, 0, 0, x2],
+                        [0, 1, 0, 0],
+                        [0, 0, 1, 0],
+                        [0, 0, 0, 1]])
+
+        # Rotacao junta 2
+        Ry3 = np.matrix([[np.cos(q4), 0, np.sin(q4), 0], 
+                    [0, 1, 0, 0],
+                    [-np.sin(q4), 0, np.cos(q4), 0],
+                    [0, 0, 0, 1]])
+
+        Ry2 = np.matrix([[np.cos(q3), 0, np.sin(q3), 0], 
+                    [0, 1, 0, 0],
+                    [-np.sin(q3), 0, np.cos(q3), 0],
+                    [0, 0, 0, 1]])
+
+        # Comprimento elo 2
+        # tx2 = np.matrix([[1, 0, 0, 10.68],
+        #                 [0, 1, 0, 3.5],
+        #                 [0, 0, 1, 2.5],
+        #                 [0, 0, 0, 1]])
+
+        tx2 = np.matrix([[1, 0, 0, x3],
+                        [0, 1, 0, 0],
+                        [0, 0, 1, 0],
+                        [0, 0, 0, 1]])
+
+    
+
+        # T = Rz*tz*Ry1*tx1*Ry2*Ry3*tx2
+        # T = Rz*tz*Ry1*tx1*Ry2*Ry3*tx2
+
+   
+        T = tz*Rz*Ry1*tx1*Ry2*Ry3*tx2
+
+        # T = sp.simplify(T)
+
+        px = T[0,3]
+        py = T[1,3]
+        pz = T[2,3]
+        print('q1: {}; q2: {}; q3: {} q4: {};'.format(q1*180/np.pi, q2*180/np.pi, q3*180/np.pi,q4*180/np.pi))
+        print('px: {}; py: {}; pz: {};'.format(px, py, pz))
+        return px, py, pz
+
+
+        
+
+    # def prepara_modelo(self):
             
-        q1 = sp.symbols('q1')
-        T01 = symTfromDH(180*((sp.pi)/180), 0.300, 0.400, q1)
-        # T01
+    #     q1 = sp.symbols('q1')
+    #     T01 = symTfromDH(180*((sp.pi)/180), 0.300, 0.400, q1)
+    #     # T01
 
-        q2 = sp.symbols('q2')
-        T12 = symTfromDH(q2, -0.05, 0.400, 180*((sp.pi)/180))
-        # T12
+    #     q2 = sp.symbols('q2')
+    #     T12 = symTfromDH(q2, -0.05, 0.400, 180*((sp.pi)/180))
+    #     # T12
 
-        q3 = sp.symbols('q3')
-        T23 = symTfromDH(q3, -0.05, 0.400, 180*((sp.pi)/180))
-        # T23
+    #     q3 = sp.symbols('q3')
+    #     T23 = symTfromDH(q3, -0.05, 0.400, 180*((sp.pi)/180))
+    #     # T23
 
-        T3e = symTfromDH(0, -0.05, 0, 0)
-        # T4e
+    #     T3e = symTfromDH(0, -0.05, 0, 0)
+    #     # T4e
 
-        T0e = T01*T12*T23*T3e
-        # T0e
+    #     T0e = T01*T12*T23*T3e
+    #     # T0e
 
-        # verificar simplificacao
-        T = sp.simplify(T0e)
-        print('Matriz de transformacao simplificada')
-        # T[3]
-        # T[7]
-        # T[11]
-        return T
+    #     # verificar simplificacao
+    #     T = sp.simplify(T0e)
+    #     print('Matriz de transformacao simplificada')
+    #     # T[3]
+    #     # T[7]
+    #     # T[11]
+    #     return T
 
-    def Obter_angulos(self,u,x, y, z, T):
-        # Definimos un punto de destino
-        # x = 0.01
-        # y = 0.1
-        # z = 0.01
-        print('Condenadas: ({}, {}, {})'.format(x, y, z))
+    # def Obter_angulos(self,u,x, y, z, T):
+    #     # Definimos un punto de destino
+    #     # x = 0.01
+    #     # y = 0.1
+    #     # z = 0.01
+    #     print('Condenadas: ({}, {}, {})'.format(x, y, z))
 
-        # preparamos las ecuaciones transformando las expresiones
-        # de la forma <expresion = valor> a la forma <expresion - valor> = 0
-        print('As equacoes:')
-        eq1 = T[3] - x
-        print('I: {}'.format(eq1))
+    #     # preparamos las ecuaciones transformando las expresiones
+    #     # de la forma <expresion = valor> a la forma <expresion - valor> = 0
+    #     print('As equacoes:')
+    #     eq1 = T[3] - x
+    #     print('I: {}'.format(eq1))
 
-        eq2 = T[7] - y
-        print('II: {}'.format(eq2))
+    #     eq2 = T[7] - y
+    #     print('II: {}'.format(eq2))
 
-        eq3 = T[11] - z
-        print('III: {}'.format(eq3))
+    #     eq3 = T[11] - z
+    #     print('III: {}'.format(eq3))
 
-        # enviamos los ángulos a las articulaciones
-        try:
-            q1 = sp.symbols('q1')
-            q2 = sp.symbols('q2')
-            q3 = sp.symbols('q3')
-            q = sp.nsolve((eq1, eq2, eq3), (q1, q2, q3), (1, 1, 1))
-            print('Angulos de entrada')
+    #     # enviamos los ángulos a las articulaciones
+    #     try:
+    #         q1 = sp.symbols('q1')
+    #         q2 = sp.symbols('q2')
+    #         q3 = sp.symbols('q3')
+    #         q = sp.nsolve((eq1, eq2, eq3), (q1, q2, q3), (1, 1, 1))
+    #         print('Angulos de entrada')
             
-        except:
-            print('Solucao nao encontrada')
-            q = [0, 0, 0]
+    #     except:
+    #         print('Solucao nao encontrada')
+    #         q = [0, 0, 0]
 
-        return q
+    #     return q
 
-    def obter_cordenadas(self,q1, q2, q3):
+    # def obter_cordenadas(self,q1, q2, q3):
 
-        T01 = symTfromDH(180*((sp.pi)/180), 0.300, 0.400, q1)
-        T12 = symTfromDH(q2, -0.05, 0.400, 180*((sp.pi)/180))
-        T23 = symTfromDH(q3, -0.05, 0.400, 180*((sp.pi)/180))
-        T3e = symTfromDH(0, -0.05, 0, 0)
-        T0e = T01*T12*T23*T3e
-        # print('x:{}, y:{}, z:{}'.format(T0e[3], T0e[7], T0e[11]))
-        return T0e
+    #     T01 = symTfromDH(180*((sp.pi)/180), 0.300, 0.400, q1)
+    #     T12 = symTfromDH(q2, -0.05, 0.400, 180*((sp.pi)/180))
+    #     T23 = symTfromDH(q3, -0.05, 0.400, 180*((sp.pi)/180))
+    #     T3e = symTfromDH(0, -0.05, 0, 0)
+    #     T0e = T01*T12*T23*T3e
+    #     # print('x:{}, y:{}, z:{}'.format(T0e[3], T0e[7], T0e[11]))
+    #     return T0e
     def teste(self):
         print("entrou nesta função")
 
