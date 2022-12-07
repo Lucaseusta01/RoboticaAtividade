@@ -31,7 +31,7 @@ class MatrixRob():
         T = Rz*tz*ta*Rx
         return T
 
-    def cinematica_dir(self, a, b, c):
+    def cinematica_dir(self, a, b, c,d):
 
         # Descricao do robo
         # Rotacao Graus |      x      |      y      |     z
@@ -43,24 +43,30 @@ class MatrixRob():
         #      0         |    0       |     0       |     0         | sobra ferramenta
 
         # Posicoe de partida servos (graus)
-        m1 = 0
+        m1 = 180 #corrigindo valor das coordenadas...
         m2 = 0
-        m3 = 0
-
+        m3 = -135
+        m4 = 0
+        
         # Mecanismo 4 barras
-        # c = b - c
+        # c =  (b - c)
+        # c +=b
 
+        # c *=-1
+        # b = b * (-1)
         # print(a, b, c)
 
         q1 = (a+m1)*np.pi/180
-        q2 = (b+m2)*np.pi/180      
+        q2 =(b+m2)*np.pi/180      
         q3 = (c+m3)*np.pi/180
+        q4 = (b-180+m4)*np.pi/180
 
         # Comprimento elos
         # x1 = 3.475
-        x1 = 5
+        x1 = 5.2
         x2 = 8.18
         x3 = 8.08
+        # x3 = 13.58
 
         # Rotacao base
         Rz = np.matrix([[np.cos(q1), -np.sin(q1), 0, 0],
@@ -69,10 +75,10 @@ class MatrixRob():
                         [0, 0, 0, 1]])
 
         # Comprimento base
-        tz = np.matrix([[1, 0, 0, 2.5],
-                        [0, 1, 0, -1.75],
-                        [0, 0, 1, x1],
-                        [0, 0, 0, 1]])
+        tz = np.matrix([[1, 0, 0, 0],
+                        [0, 1, 0, 0  ],
+                        [0, 0, 1, x1 ],
+                        [0, 0, 0, 1  ]])
 
         # Rotacao junta 1
         Ry1 = np.matrix([[np.cos(q2), 0, np.sin(q2), 0], 
@@ -83,31 +89,47 @@ class MatrixRob():
         Ry1 = np.linalg.inv(Ry1)
 
         # Comprimento elo 1
-        tx1 = np.matrix([[1, 0, 0, (-1)*x2],
-                        [0, 1, 0, 1.75],
+        tx1 = np.matrix([[1, 0, 0, x2],
+                        [0, 1, 0, 0],
                         [0, 0, 1, 0],
                         [0, 0, 0, 1]])
 
         # Rotacao junta 2
-        Ry2 = np.matrix([[np.cos(q3), 0, -np.sin(q3), 0], 
+        Ry3 = np.matrix([[np.cos(q4), 0, np.sin(q4), 0], 
                     [0, 1, 0, 0],
-                    [np.sin(q3), 0, np.cos(q3), 0],
+                    [-np.sin(q4), 0, np.cos(q4), 0],
+                    [0, 0, 0, 1]])
+
+        Ry2 = np.matrix([[np.cos(q3), 0, np.sin(q3), 0], 
+                    [0, 1, 0, 0],
+                    [-np.sin(q3), 0, np.cos(q3), 0],
                     [0, 0, 0, 1]])
 
         # Comprimento elo 2
-        tx2 = np.matrix([[1, 0, 0, 10.68],
-                        [0, 1, 0, 3.5],
-                        [0, 0, 1, 2.5],
+        # tx2 = np.matrix([[1, 0, 0, 10.68],
+        #                 [0, 1, 0, 3.5],
+        #                 [0, 0, 1, 2.5],
+        #                 [0, 0, 0, 1]])
+
+        tx2 = np.matrix([[1, 0, 0, x3],
+                        [0, 1, 0, 0],
+                        [0, 0, 1, 0],
                         [0, 0, 0, 1]])
 
-        # T = Rz*tz*Ry1*tx1*Ry2*tx2
-        T = Rz*tz*Ry1*tx1*Ry2*tx2
+    
+
+        # T = Rz*tz*Ry1*tx1*Ry2*Ry3*tx2
+        # T = Rz*tz*Ry1*tx1*Ry2*Ry3*tx2
+
+   
+        T = tz*Rz*Ry1*tx1*Ry2*Ry3*tx2
 
         # T = sp.simplify(T)
 
         px = T[0,3]
         py = T[1,3]
         pz = T[2,3]
+        print('q1: {}; q2: {}; q3: {} q4: {};'.format(q1*180/np.pi, q2*180/np.pi, q3*180/np.pi,q4*180/np.pi))
         print('px: {}; py: {}; pz: {};'.format(px, py, pz))
         return px, py, pz
 

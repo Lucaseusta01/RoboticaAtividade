@@ -17,11 +17,15 @@ teta1 = 90
 teta2 = 30
 teta3 = 90
 
+oldTeta2 = 0
+
 calculando = MatrixRob()
 calculando.teste()
 # px,py,pz = calculando.cinematica_dir(0,90,0)
-px,py,pz = calculando.cinematica_dir(teta1,teta2,teta3)
+# px,py,pz = calculando.cinematica_dir(teta1,teta2,teta3)
 
+updateInterface = 10
+calcularPonto = 0
 # print(calculando.cinematica_dir(0,0,0))
 
 # print('px: {}; py: {}; pz: {};'.format(px, py, pz))
@@ -31,12 +35,12 @@ mytime = 0
 event="" 
 values=""
 
-position = {'Px':0,'Py':0,'Pz':0}
+position = {'Px':0.0,'Py':0.0,'Pz':0.0}
 angulo = {'alfa':0,'beta':0,'gama':0}
 
-slider01 = {'value':90,'sent':0,'serial':"S1",'msg':"",'resp':""}
-slider02 = {'value':90,'sent':0,'serial':"S2",'msg':"",'resp':""}
-slider03 = {'value':90,'sent':0,'serial':"S3",'msg':"",'resp':""}
+slider01 = {'value':90.0,'sent':0,'serial':"S1",'msg':"",'resp':""}
+slider02 = {'value':90.0,'sent':0,'serial':"S2",'msg':"",'resp':""}
+slider03 = {'value':90.0,'sent':0,'serial':"S3",'msg':"",'resp':""}
 garra = {'value':"Open",'sent':0,'serial':"S3",'msg':"",'resp':""}
 
 # slider01["value"] = teta1
@@ -121,11 +125,14 @@ def writeSerial(msg):
 
 def periodic():
 
-    global mytime, timeoutSend
+    global mytime, timeoutSend, updateInterface
     mytime +=1
 
     if timeoutSend:
         timeoutSend -=1
+    
+    if updateInterface:
+        updateInterface -=1
     
     threading.Timer(0.1, periodic).start()
 
@@ -186,6 +193,20 @@ while 1:
     # tratamento dos eventos
     if event is not None:
 
+        if updateInterface == 0:
+            
+            px,py,pz = calculando.cinematica_dir(slider01["value"],slider02["value"],slider03["value"],oldTeta2)
+            position["Px"] = px
+            position["Py"] = py
+            position["Pz"] = pz
+            # oldTeta2 = slider02["value"]
+            window.Element("Px").Update(round(position["Px"],1))
+            window.Element("Py").Update(round(position["Py"],1))
+            window.Element("Pz").Update(round(position["Pz"],1))
+            updateInterface = 20
+        
+            
+
         #slider
         if event == "slider_01":
             slider01["value"] = values["slider_01"]
@@ -193,7 +214,7 @@ while 1:
             slider01["resp"] = "E" + slider01["msg"]
             slider01["sent"] = writeSerial(slider01["msg"])
             window.Element("teta1").Update(int(slider01["value"]))
-            window.Element("Px").Update(int(position["Px"]))
+            # window.Element("Px").Update((position["Px"]))
             timeoutSend = 15
             # print("slider_01:",slider01["value"])
         if event == "slider_02":
@@ -202,8 +223,9 @@ while 1:
             slider02["resp"] = "E" + slider02["msg"]
             slider02["sent"] = writeSerial(slider02["msg"])
             window.Element("teta2").Update(int(slider02["value"]))
-            window.Element("Py").Update(int((-1)*position["Py"]))
+            # window.Element("Py").Update((position["Py"]))
             timeoutSend = 15
+            calcularPonto = 1
             # print("slider_02:",slider02["value"])
         if event == "slider_03":
             slider03["value"] = values["slider_03"]
@@ -211,15 +233,14 @@ while 1:
             slider03["resp"] = "E" + slider03["msg"]
             slider03["sent"] = writeSerial(slider03["msg"])
             window.Element("teta3").Update(int(slider03["value"]))
-            window.Element("Pz").Update(int(position["Pz"]))
+            # window.Element("Pz").Update((position["Pz"]))
             timeoutSend = 15
             # print("slider_02:",slider03["value"])
 
-        px,py,pz = calculando.cinematica_dir(slider01["value"],slider02["value"],slider03["value"])
-        position["Px"] = px
-        position["Py"] = py
-        position["Pz"] = pz
 
+
+
+            
         #botão
         if event == "metodo":
             metodo = values["metodo"]
