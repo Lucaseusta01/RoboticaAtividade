@@ -31,7 +31,7 @@ class MatrixRob():
         T = Rz*tz*ta*Rx
         return T
 
-    def cinematica_dir(self, a, b, c,d):
+    def cinematica_dir(self, a, b, c):
 
         # Descricao do robo
         # Rotacao Graus |      x      |      y      |     z
@@ -81,12 +81,12 @@ class MatrixRob():
                         [0, 0, 0, 1  ]])
 
         # Rotacao junta 1
-        Ry1 = np.matrix([[np.cos(q2), 0, np.sin(q2), 0], 
+        pr = np.matrix([[np.cos(q2), 0, np.sin(q2), 0], 
                     [0, 1, 0, 0],
                     [-np.sin(q2), 0, np.cos(q2), 0],
                     [0, 0, 0, 1]])
 
-        Ry1 = np.linalg.inv(Ry1)
+        Ry1 = np.linalg.inv(pr)
 
         # Comprimento elo 1
         tx1 = np.matrix([[1, 0, 0, x2],
@@ -95,15 +95,17 @@ class MatrixRob():
                         [0, 0, 0, 1]])
 
         # Rotacao junta 2
+        Ry2 = np.matrix([[np.cos(q3), 0, np.sin(q3), 0], 
+            [0, 1, 0, 0],
+            [-np.sin(q3), 0, np.cos(q3), 0],
+            [0, 0, 0, 1]])
+
         Ry3 = np.matrix([[np.cos(q4), 0, np.sin(q4), 0], 
                     [0, 1, 0, 0],
                     [-np.sin(q4), 0, np.cos(q4), 0],
                     [0, 0, 0, 1]])
 
-        Ry2 = np.matrix([[np.cos(q3), 0, np.sin(q3), 0], 
-                    [0, 1, 0, 0],
-                    [-np.sin(q3), 0, np.cos(q3), 0],
-                    [0, 0, 0, 1]])
+
 
         # Comprimento elo 2
         # tx2 = np.matrix([[1, 0, 0, 10.68],
@@ -121,9 +123,14 @@ class MatrixRob():
         # T = Rz*tz*Ry1*tx1*Ry2*Ry3*tx2
         # T = Rz*tz*Ry1*tx1*Ry2*Ry3*tx2
 
-   
+        z = np.dot(tz, Rz)
+        f = np.dot(z,Ry1)
+        xone= np.dot(f,tx1)
+        yone=np.dot(xone,Ry2)
+        zone = np.dot(yone,Ry3)
+        T_fim=np.dot(zone,tx2)
+        
         T = tz*Rz*Ry1*tx1*Ry2*Ry3*tx2
-
         # T = sp.simplify(T)
 
         px = T[0,3]

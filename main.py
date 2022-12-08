@@ -195,7 +195,7 @@ while 1:
 
         if updateInterface == 0:
             
-            px,py,pz = calculando.cinematica_dir(slider01["value"],slider02["value"],slider03["value"],oldTeta2)
+            px,py,pz = calculando.cinematica_dir(a=slider01["value"],b=slider02["value"],c=slider03["value"])
             position["Px"] = px
             position["Py"] = py
             position["Pz"] = pz
