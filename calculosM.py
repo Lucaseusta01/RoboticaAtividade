@@ -2,6 +2,7 @@
 # importamos las librerías necesarias
 import sympy as sp
 import numpy as np
+import math
 
 class MatrixRob():
 
@@ -31,7 +32,7 @@ class MatrixRob():
         T = Rz*tz*ta*Rx
         return T
 
-    def cinematica_dir(self, a, b, c):
+    def cinematica_dir(self, a, b, c,ret_T=False):
 
         # Descricao do robo
         # Rotacao Graus |      x      |      y      |     z
@@ -41,6 +42,8 @@ class MatrixRob():
         #      q3       |    0.000    |   0.000    |     0.000     | junta rotativa elo 2 (Rx)
         # ---------------------------------------------------------
         #      0         |    0       |     0       |     0         | sobra ferramenta
+
+        print('Teta1: {}; Teta2: {}; Teta3: {};'.format(a, b, c))
 
         # Posicoe de partida servos (graus)
         m1 = 180 #corrigindo valor das coordenadas...
@@ -138,7 +141,61 @@ class MatrixRob():
         pz = T[2,3]
         print('q1: {}; q2: {}; q3: {} q4: {};'.format(q1*180/np.pi, q2*180/np.pi, q3*180/np.pi,q4*180/np.pi))
         print('px: {}; py: {}; pz: {};'.format(px, py, pz))
-        return px, py, pz
+        if ret_T == False:
+            return px, py, pz
+        else:
+            return T
+
+    def cinematica_inv(self,method,px,py,pz,T):
+        
+        alfa = 0
+        beta = 0
+        gama = 0
+
+        T[0,3] = px
+        T[1,3] = py
+        T[2,3] = pz
+        
+        print("T:\n",T)
+        if method == "RAG":
+            print("[cinematica_inv] method: RAG")
+            nx = T[0,0]
+            ny = T[1,0]
+            nz = T[2,0]
+            ox = T[0,1]
+            oy = T[1,1]
+            ax = T[0,2]
+            ay = T[2,2]
+
+            print('nx: {}; ny: {}; nz: {};'.format(nx, ny, nz))
+            alfa = math.atan2(ny,nx)*180/math.pi
+            alfa1 = alfa + 180
+            beta = math.atan2(-nz,(nx*np.cos(alfa*np.pi/180) + ny*np.sin(alfa*np.pi/180)))*180/math.pi
+            beta1 = beta + 180
+            gama = math.atan2((-ay*np.cos(alfa*np.pi/180) + ax*np.sin(alfa*np.pi/180)),(oy*np.cos(alfa*np.pi/180) - ox*np.sin(alfa*np.pi/180)))*180/math.pi
+            gama1 = gama + 180
+            # print("Alfa:{}; Alfa1:{}".format(alfa,alfa1))
+            # print("Beta:{}; Beta1:{}".format(beta,beta1))
+            # print("Gama:{}; Gama1:{}".format(gama-90,gama1))
+        elif method == "Euler":
+            print("[cinematica_inv] method: Euler")
+            nx = T[0,0]
+            ny = T[1,0]
+            nz = T[2,0]
+        elif method == "DH":
+            print("[cinematica_inv] method: DH")
+            nx = T[0,0]
+            ny = T[1,0]
+            nz = T[2,0]
+        else:
+            print("[cinematica_inv] method: INVALID")
+            alfa = 90
+            beta = 90
+            gama = 90
+
+        print('Alfa: {}; Beta: {}; gama: {};'.format(alfa, beta+45, gama-90))
+        return alfa, beta+45, gama-90
+ 
 
 
         
