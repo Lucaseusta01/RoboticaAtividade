@@ -1,5 +1,5 @@
 from tkinter import CENTER
-from PySimpleGUI import Window, Text, Input, Push, Column, VSeparator, HSeparator, Button, Slider,Combo, Multiline,cprint,Ok
+from PySimpleGUI import Radio, Window, Text, Input, Push, Column, VSeparator, HSeparator, Button, Slider,Combo, Multiline,cprint,Ok
 import PySimpleGUI as sg
 import serial #pip install PySerial
 import time
@@ -21,6 +21,11 @@ oldTeta2 = 0
 
 calculando = MatrixRob()
 calculando.teste()
+
+metodo = "RAG"
+cinematica = "True"
+inversa = False
+MatrizTransf = calculando.cinematica_dir(a=90,b=90,c=90,ret_T=True)
 # px,py,pz = calculando.cinematica_dir(0,90,0)
 # px,py,pz = calculando.cinematica_dir(teta1,teta2,teta3)
 
@@ -50,7 +55,7 @@ garra = {'value':"Open",'sent':0,'serial':"S3",'msg':"",'resp':""}
 timeoutSend = 0
 
 layout_bot = [
-    [Text("Escolha como gostaria de resolver:",auto_size_text=True,enable_events=True), Combo(["RAG", "Euler", "DH"],enable_events=True,key="metodo"), Push(),Button("Teste do Robô",enable_events=True, size=(12,1), key='add')],
+    [Text("Escolha como gostaria de resolver:",auto_size_text=True,enable_events=True), Combo(["RAG", "Euler", "DH"],enable_events=True,key="metodo",default_value="RAG"), Push(),Button("Teste do Robô",enable_events=True, size=(12,1), key='add')],
 ]
 
 layout_Pxyz = [
@@ -60,8 +65,10 @@ layout_Pxyz = [
 ]
 
 layout_abg = [
-    [Button("envio",enable_events=True, size=(12,1), key='add1')],
-    [Button("envio2",enable_events=True, size=(12,1), key='add2')],
+    # [Button("Direta",enable_events=True, size=(12,1), key='add1')],
+    # [Button("Inversa",enable_events=True, size=(12,1), key='add2')],
+    [Radio('Direta',"radio1",key = "add1",default=True,enable_events=True),],
+    [Radio('Inversa', "radio1", default=False,enable_events=True)],
     [Button("Garra",enable_events=True, size=(12,1), key='add3')]
     
 ]
@@ -195,17 +202,40 @@ while 1:
 
         if updateInterface == 0:
             
-            px,py,pz = calculando.cinematica_dir(a=slider01["value"],b=slider02["value"],c=slider03["value"])
-            position["Px"] = px
-            position["Py"] = py
-            position["Pz"] = pz
-            # oldTeta2 = slider02["value"]
-            window.Element("Px").Update(round(position["Px"],1))
-            window.Element("Py").Update(round(position["Py"],1))
-            window.Element("Pz").Update(round(position["Pz"],1))
+            
+            cinematica = values["add1"]
+
+
+            #cinematica direta
+            if cinematica == True:
+                print("Cinemática Direta")
+                px,py,pz = calculando.cinematica_dir(a=slider01["value"],b=slider02["value"],c=slider03["value"])
+                position["Px"] = px
+                position["Py"] = py
+                position["Pz"] = pz
+                # oldTeta2 = slider02["value"]
+                window.Element("Px").Update(round(position["Px"],1))
+                window.Element("Py").Update(round(position["Py"],1))
+                window.Element("Pz").Update(round(position["Pz"],1))
+            
+            #cinematica inversa
+            if cinematica == False:
+                print("Cinematica Inversa")
+                #calculo dos valores de angulo
+                alfa, beta, gama = calculando.cinematica_inv(metodo,position["Px"],position["Py"],position["Pz"],MatrizTransf)
+                
+                #atualizo a lista
+                angulo["alfa"] = alfa
+                angulo["beta"] = beta
+                angulo["gama"] = gama
+                
+                #atualizo a interface
+                window.Element("alfa").Update(round(angulo["alfa"]))
+                window.Element("beta").Update(round(angulo["beta"]))
+                window.Element("gama").Update(round(angulo["gama"]))
+
             updateInterface = 20
         
-            
 
         #slider
         if event == "slider_01":
@@ -236,21 +266,29 @@ while 1:
             # window.Element("Pz").Update((position["Pz"]))
             timeoutSend = 15
             # print("slider_02:",slider03["value"])
+        
 
 
 
-
+        # if updateInterface == 1:
+        #     if metodo == "RAG":
+        #         print("Metodo escolhido: RAG")
+        #     elif metodo == "Euler":
+        #         print("Metodo escolhido: Euler")
+        #     elif metodo == "DH":
+        #         print("Metodo escolhido: DH")
             
         #botão
         if event == "metodo":
             metodo = values["metodo"]
-            print("Metodo:",metodo)
+            # print("Metodo:",metodo)
         if event == "add":
             print("Teste do Robô press")
-        if event == "add1":
-            print("Envio press")
-        if event == "add2":
-            print("Envio 2 press")
+        # if event == "add1":
+        #     cinematica = values["add1"]
+        # if event == "add2":
+        #     cinematica = "Inversa"
+        #     print("Inversa press")
         if event == "add3":
             if garra["value"] == "Open":
                 print("Abrir Garra")
